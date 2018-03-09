@@ -62,6 +62,8 @@ namespace PolishPuzzle
             if(string.IsNullOrEmpty(targetStr))
             {
                 solutions.Add(acc + commonPrefix);
+                strings[0] = commonPrefix + strings[0]; //TODO remove dup
+                strings[1] = commonPrefix + strings[1];
                 return;
             }
 
