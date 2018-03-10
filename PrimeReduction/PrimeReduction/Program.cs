@@ -2,12 +2,13 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 
 namespace PrimeReduction
 {
     //IMHO much better to use named Tuples in new C#
-    public class PrimeReductionWithCount
+    public struct PrimeReductionWithCount
     {
         public readonly int Reduction;
         public readonly int Count;
@@ -59,22 +60,33 @@ namespace PrimeReduction
             if(v == 0)
                 return u;
 
-            // look for factors of 2
-            if(u % 2 == 0) // u is even
+            int shift;
+
+            for(shift = 0; (u | v) % 2 == 0; shift++)
             {
-                if(v % 2 == 1) // v is odd
-                    return Gcd(u >> 1, v);
-                return Gcd(u >> 1, v >> 1) << 1;
+                u >>= 1;
+                v >>= 1;
             }
 
-            if(v % 2 == 0) // u is odd, v is even
-                return Gcd(u, v >> 1);
+            while(u % 2 == 0)
+                u >>= 1;
 
-            // reduce larger argument
-            if(u > v)
-                return Gcd((u - v) >> 1, v);
+            do
+            {
+                while(v % 2 == 0)
+                    v >>= 1;
 
-            return Gcd((v - u) >> 1, u);
+                if(u > v)
+                {
+                    int t = v;
+                    v = u;
+                    u = t;
+                }
+
+                v = v - u;
+            } while(v != 0);
+
+            return u << shift;
         }
 
         private static bool IsProbablePrime(int n, int s, int d, int a)
@@ -195,14 +207,14 @@ namespace PrimeReduction
             }
 
             var sw = Stopwatch.StartNew();
-            var res = nums.Select(PrimeFunctions.Reduce).ToArray();
+            var res = nums.AsParallel().Select(PrimeFunctions.Reduce).ToArray();
             sw.Stop();
             foreach(var num in res)
             {
                 Console.WriteLine($"{num.Reduction} {num.Count}");
             }
-            //            Console.WriteLine($"Execution took {sw.ElapsedMilliseconds}ms");
-            //            Console.ReadKey();
+            Console.WriteLine($"Execution took {sw.ElapsedMilliseconds}ms");
+            Console.ReadKey();
         }
     }
 }

@@ -16,7 +16,7 @@ namespace PrimeReduction.Tests
         [TestCase(16, new int[] { 2, 2, 2, 2 })]
         [TestCase(231, new int[] { 3, 7, 11 })]
         [TestCase(104723, new int[] { 104723 })]
-        [TestCase(999888777, new int[] { 3, 3, 27, 3002669 })]
+        [TestCase(999888777, new int[] { 3, 3, 37, 3002669 })]
         public void TestFactorization(int n, int[] res)
         {
             CollectionAssert.AreEquivalent(res, PrimeFunctions.GetPrimes(n));
@@ -39,7 +39,7 @@ namespace PrimeReduction.Tests
         public void BigInputTest()
         {
             var rnd = new Random(42);
-            var source = Enumerable.Repeat((int)1, 40000)
+            var source = Enumerable.Repeat(1, 20000)
                 .Select(n => rnd.Next(0, 1000000000))
                 .ToArray();
             var res = new PrimeReductionWithCount[source.Length];
