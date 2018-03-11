@@ -11,6 +11,12 @@ namespace PrimeReduction.Tests
     [TestFixture]
     public class ReductionTests
     {
+        [SetUp]
+        public void SetUp()
+        {
+            PrimeFunctions.BeginPrecalc(100000);
+        }
+
         [TestCase(2, new int[] { 2 })]
         [TestCase(10, new int[] { 2, 5 })]
         [TestCase(16, new int[] { 2, 2, 2, 2 })]
@@ -39,7 +45,7 @@ namespace PrimeReduction.Tests
         public void BigInputTest()
         {
             var rnd = new Random(42);
-            var source = Enumerable.Repeat(1, 20000)
+            var source = Enumerable.Repeat(1, 1000)
                 .Select(n => rnd.Next(0, 1000000000))
                 .ToArray();
             var res = new PrimeReductionWithCount[source.Length];
@@ -50,6 +56,21 @@ namespace PrimeReduction.Tests
             }
             sw.Stop();
             Assert.Less(sw.ElapsedMilliseconds, 4000);
+        }
+
+        [TestCase(1000, 25)]
+        [TestCase(10000, 320)]
+        public void PrecaclTimeTest(int size, int expectedTimeMs)
+        {
+            var res = new PrimeReductionWithCount[size];
+            var sw = Stopwatch.StartNew();
+            for(int i = 5; i < res.Length; i++)
+            {
+                res[i] = PrimeFunctions.Reduce(i);
+            }
+            sw.Stop();
+            Assert.Less(sw.ElapsedMilliseconds, expectedTimeMs,
+                $"Execution took {sw.ElapsedMilliseconds}ms");
         }
 
         [Test]

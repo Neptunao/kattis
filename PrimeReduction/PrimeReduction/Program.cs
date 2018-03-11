@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 namespace PrimeReduction
 {
     //IMHO much better to use named Tuples in new C#
+    [DebuggerDisplay("{Reduction} {Count}")]
     public struct PrimeReductionWithCount
     {
         public readonly int Reduction;
@@ -23,6 +24,23 @@ namespace PrimeReduction
     public static class PrimeFunctions
     {
         private static readonly Random Rnd = new Random();
+        private static readonly Dictionary<int, PrimeReductionWithCount> Precalc = new Dictionary<int, PrimeReductionWithCount>
+        {
+            { 2, new PrimeReductionWithCount(2, 1) },
+            { 3, new PrimeReductionWithCount(3, 1) }
+        };
+
+        public static Task BeginPrecalc(int limit)
+        {
+            return Task.Factory.StartNew(() =>
+            {
+                const int max = 10000;
+                for(int i = 5; i < max; i++)
+                {
+                    Precalc[i] = Reduce(i);
+                }
+            });
+        }
 
         //Right-to-left binary method
         private static decimal ModPow(int a, int exponent, int mod)
@@ -183,10 +201,22 @@ namespace PrimeReduction
 
         public static PrimeReductionWithCount Reduce(int n)
         {
+            if(Precalc.ContainsKey(n))
+            {
+                return Precalc[n];
+            }
             var n1 = n;
             int i = 1;
             while(!IsPrime(n1))
             {
+                Debug.WriteLine($"PrimeReductionWithCount: {n1} step {i}");
+                PrimeReductionWithCount v;
+                if(Precalc.TryGetValue(n1, out v))
+                {
+                    Debug.WriteLine("Hit!");
+                    return new PrimeReductionWithCount(v.Reduction, v.Count + i - 1);
+                }
+                Debug.WriteLine("Miss!");
                 var readOnlyCollection = GetPrimes(n1);
                 n1 = readOnlyCollection.Sum();
                 i++;
@@ -199,6 +229,7 @@ namespace PrimeReduction
     {
         private static void Main(string[] args)
         {
+            PrimeFunctions.BeginPrecalc(100000);
             int n;
             var nums = new List<int>(20000);
             while((n = int.Parse(Console.ReadLine())) != 4)
@@ -207,12 +238,11 @@ namespace PrimeReduction
             }
 
             var sw = Stopwatch.StartNew();
-            var res = nums.AsParallel().Select(PrimeFunctions.Reduce).ToArray();
-            sw.Stop();
-            foreach(var num in res)
+            foreach(var num in nums.Select(PrimeFunctions.Reduce))
             {
                 Console.WriteLine($"{num.Reduction} {num.Count}");
             }
+            sw.Stop();
             Console.WriteLine($"Execution took {sw.ElapsedMilliseconds}ms");
             Console.ReadKey();
         }
