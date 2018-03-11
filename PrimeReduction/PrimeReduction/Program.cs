@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Runtime.CompilerServices;
+using System.Text;
 using System.Threading.Tasks;
+using Kattis.IO;
 
 namespace PrimeReduction
 {
@@ -19,23 +21,28 @@ namespace PrimeReduction
             Reduction = reduction;
             Count = count;
         }
+
+        public override string ToString()
+        {
+            return $"{Reduction} {Count}";
+        }
     }
 
     public static class PrimeFunctions
     {
         private static readonly Random Rnd = new Random();
-        private static readonly Dictionary<int, PrimeReductionWithCount> Precalc = new Dictionary<int, PrimeReductionWithCount>
-        {
-            { 2, new PrimeReductionWithCount(2, 1) },
-            { 3, new PrimeReductionWithCount(3, 1) }
-        };
+        private static readonly Dictionary<int, PrimeReductionWithCount> Precalc
+            = new Dictionary<int, PrimeReductionWithCount>
+            {
+                { 2, new PrimeReductionWithCount(2, 1) },
+                { 3, new PrimeReductionWithCount(3, 1) }
+            };
 
-        public static Task BeginPrecalc(int limit)
+        public static Task BeginPrecalc(int min, int max)
         {
             return Task.Factory.StartNew(() =>
             {
-                const int max = 10000;
-                for(int i = 5; i < max; i++)
+                for(int i = min; i <= max; i++)
                 {
                     Precalc[i] = Reduce(i);
                 }
@@ -214,13 +221,16 @@ namespace PrimeReduction
                 if(Precalc.TryGetValue(n1, out v))
                 {
                     Debug.WriteLine("Hit!");
-                    return new PrimeReductionWithCount(v.Reduction, v.Count + i - 1);
+                    return new PrimeReductionWithCount(v.Reduction,
+                        v.Count + i - 1);
                 }
+
                 Debug.WriteLine("Miss!");
                 var readOnlyCollection = GetPrimes(n1);
                 n1 = readOnlyCollection.Sum();
                 i++;
             }
+
             return new PrimeReductionWithCount(n1, i);
         }
     }
@@ -229,22 +239,32 @@ namespace PrimeReduction
     {
         private static void Main(string[] args)
         {
-            PrimeFunctions.BeginPrecalc(100000);
+            PrimeFunctions.BeginPrecalc(5, 10000);
+
             int n;
             var nums = new List<int>(20000);
-            while((n = int.Parse(Console.ReadLine())) != 4)
+            var scanner = new Scanner();
+            var w = new BufferedStdoutWriter();
+            var resStr = new StringBuilder(10000);
+
+            while((n = scanner.NextInt()) != 4)
             {
                 nums.Add(n);
             }
 
             var sw = Stopwatch.StartNew();
-            foreach(var num in nums.Select(PrimeFunctions.Reduce))
+            var t = Task.Factory.StartNew(() =>
             {
-                Console.WriteLine($"{num.Reduction} {num.Count}");
-            }
+                foreach(var reduce in nums.Select(PrimeFunctions.Reduce))
+                {
+                    resStr.AppendLine(reduce.ToString());
+                }
+            });
+            t.Wait();
             sw.Stop();
+            w.Write(resStr.ToString());
+            w.Flush();
             Console.WriteLine($"Execution took {sw.ElapsedMilliseconds}ms");
-            Console.ReadKey();
         }
     }
 }

@@ -14,7 +14,7 @@ namespace PrimeReduction.Tests
         [SetUp]
         public void SetUp()
         {
-            PrimeFunctions.BeginPrecalc(100000);
+            PrimeFunctions.BeginPrecalc(5, 10000);
         }
 
         [TestCase(2, new int[] { 2 })]
