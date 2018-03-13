@@ -50,18 +50,18 @@ namespace PrimeReduction
 
             int shift;
 
-            for(shift = 0; (u | v) % 2 == 0; shift++)
+            for(shift = 0; ((u | v) & 1) == 0; shift++)
             {
                 u >>= 1;
                 v >>= 1;
             }
 
-            while(u % 2 == 0)
+            while((u & 1) == 0)
                 u >>= 1;
 
             do
             {
-                while(v % 2 == 0)
+                while((v & 1) == 0)
                     v >>= 1;
 
                 if(u > v)
@@ -96,7 +96,7 @@ namespace PrimeReduction
         //Miller-Rabin primality test (deterministic for n < 3,215,031,751)
         public static bool IsPrime(uint n)
         {
-            if(n % 2 == 0)
+            if((n & 1) == 0)
             {
                 return n == 2;
             }
@@ -105,9 +105,9 @@ namespace PrimeReduction
                 return n > 1;
             }
 
-            var d = n / 2;
+            var d = n >> 1;
             uint s = 1;
-            while(d % 2 == 0)
+            while((d & 1) == 0)
             {
                 d /= 2;
                 s++;
@@ -122,7 +122,7 @@ namespace PrimeReduction
         //Pollard's rho factorization algorithm
         private static uint PollardRho(uint n)
         {
-            if(n % 2 == 0)
+            if((n & 1) == 0)
             {
                 return 2;
             }
