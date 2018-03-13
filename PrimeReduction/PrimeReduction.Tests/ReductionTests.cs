@@ -11,34 +11,28 @@ namespace PrimeReduction.Tests
     [TestFixture]
     public class ReductionTests
     {
-        [SetUp]
-        public void SetUp()
+        [TestCase(2, new uint[] { 2 })]
+        [TestCase(10, new uint[] { 2, 5 })]
+        [TestCase(16, new uint[] { 2, 2, 2, 2 })]
+        [TestCase(231, new uint[] { 3, 7, 11 })]
+        [TestCase(104723, new uint[] { 104723 })]
+        [TestCase(999888777, new uint[] { 3, 3, 37, 3002669 })]
+        public void TestFactorization(int n, uint[] res)
         {
-            PrimeFunctions.BeginPrecalc(5, 10000);
+            CollectionAssert.AreEquivalent(res, PrimeFunctions.GetPrimes((uint)n));
         }
 
-        [TestCase(2, new int[] { 2 })]
-        [TestCase(10, new int[] { 2, 5 })]
-        [TestCase(16, new int[] { 2, 2, 2, 2 })]
-        [TestCase(231, new int[] { 3, 7, 11 })]
-        [TestCase(104723, new int[] { 104723 })]
-        [TestCase(999888777, new int[] { 3, 3, 37, 3002669 })]
-        public void TestFactorization(int n, int[] res)
+        [TestCase(2, ExpectedResult = new uint[] { 2, 1 })]
+        [TestCase(3, ExpectedResult = new uint[] { 3, 1 })]
+        [TestCase(5, ExpectedResult = new uint[] { 5, 1 })]
+        [TestCase(76, ExpectedResult = new uint[] { 23, 2 })]
+        [TestCase(100, ExpectedResult = new uint[] { 5, 5 })]
+        [TestCase(2001, ExpectedResult = new uint[] { 5, 6 })]
+        [TestCase(999888777, ExpectedResult = new uint[] { 43, 7 })]
+        public uint[] TestReduce(int n)
         {
-            CollectionAssert.AreEquivalent(res, PrimeFunctions.GetPrimes(n));
-        }
-
-        [TestCase(2, ExpectedResult = new int[] { 2, 1 })]
-        [TestCase(3, ExpectedResult = new int[] { 3, 1 })]
-        [TestCase(5, ExpectedResult = new int[] { 5, 1 })]
-        [TestCase(76, ExpectedResult = new int[] { 23, 2 })]
-        [TestCase(100, ExpectedResult = new int[] { 5, 5 })]
-        [TestCase(2001, ExpectedResult = new int[] { 5, 6 })]
-        [TestCase(999888777, ExpectedResult = new int[] { 43, 7 })]
-        public int[] TestReduce(int n)
-        {
-            var t = PrimeFunctions.Reduce(n);
-            return new int[] { t.Reduction, t.Count };
+            var t = PrimeFunctions.Reduce((uint)n);
+            return new uint[] { t.Reduction, t.Count };
         }
 
         [Test]
@@ -46,7 +40,7 @@ namespace PrimeReduction.Tests
         {
             var rnd = new Random(42);
             var source = Enumerable.Repeat(1, 1000)
-                .Select(n => rnd.Next(0, 1000000000))
+                .Select(n => (uint)rnd.Next(100000001, 1000000000))
                 .ToArray();
             var res = new PrimeReductionWithCount[source.Length];
             var sw = Stopwatch.StartNew();
@@ -64,7 +58,7 @@ namespace PrimeReduction.Tests
         {
             var res = new PrimeReductionWithCount[size];
             var sw = Stopwatch.StartNew();
-            for(int i = 5; i < res.Length; i++)
+            for(uint i = 5; i < res.Length; i++)
             {
                 res[i] = PrimeFunctions.Reduce(i);
             }

@@ -13,10 +13,10 @@ namespace PrimeReduction
     [DebuggerDisplay("{Reduction} {Count}")]
     public struct PrimeReductionWithCount
     {
-        public readonly int Reduction;
-        public readonly int Count;
+        public readonly uint Reduction;
+        public readonly uint Count;
 
-        public PrimeReductionWithCount(int reduction, int count)
+        public PrimeReductionWithCount(uint reduction, uint count)
         {
             Reduction = reduction;
             Count = count;
@@ -31,43 +31,6 @@ namespace PrimeReduction
     public static class PrimeFunctions
     {
         private static readonly Random Rnd = new Random();
-        private static readonly Dictionary<int, PrimeReductionWithCount> Precalc
-            = new Dictionary<int, PrimeReductionWithCount>
-            {
-                { 2, new PrimeReductionWithCount(2, 1) },
-                { 3, new PrimeReductionWithCount(3, 1) }
-            };
-
-        public static Task BeginPrecalc(int min, int max)
-        {
-            return Task.Factory.StartNew(() =>
-            {
-                for(int i = min; i <= max; i++)
-                {
-                    Precalc[i] = Reduce(i);
-                }
-            });
-        }
-
-        //Right-to-left binary method
-        private static decimal ModPow(int a, int exponent, int mod)
-        {
-            if(mod == 1)
-                return 0;
-            decimal res = 1;
-            decimal power = a;
-            while(exponent > 0)
-            {
-                if(exponent % 2 == 1)
-                {
-                    res = (res * power) % mod;
-                }
-
-                exponent = exponent >> 1;
-                power = (power * power) % mod;
-            }
-            return res;
-        }
 
         private static int GetRandom(int x, int a)
         {
@@ -114,15 +77,15 @@ namespace PrimeReduction
             return u << shift;
         }
 
-        private static bool IsProbablePrime(int n, int s, int d, int a)
+        private static bool IsProbablePrime(uint n, uint s, uint d, uint a)
         {
-            decimal x = ModPow(a, d, n);
-            decimal y = 0;
+            ulong x = BarrettReduction.ModPow(a, d, n);
+            ulong y = 0;
 
             while(s != 0)
             {
                 y = (x * x) % n;
-                if(y == 1 && x != 1 && x != n - 1)
+                if(y == 1 && x != 1 && x != (ulong)n - 1)
                     return false;
                 x = y;
                 s--;
@@ -131,7 +94,7 @@ namespace PrimeReduction
         }
 
         //Miller-Rabin primality test (deterministic for n < 3,215,031,751)
-        public static bool IsPrime(int n)
+        public static bool IsPrime(uint n)
         {
             if(n % 2 == 0)
             {
@@ -143,7 +106,7 @@ namespace PrimeReduction
             }
 
             var d = n / 2;
-            var s = 1;
+            uint s = 1;
             while(d % 2 == 0)
             {
                 d /= 2;
@@ -157,7 +120,7 @@ namespace PrimeReduction
         }
 
         //Pollard's rho factorization algorithm
-        private static int PollardRho(int n)
+        private static uint PollardRho(uint n)
         {
             if(n % 2 == 0)
             {
@@ -166,19 +129,19 @@ namespace PrimeReduction
 
             int a = 2;
             int b = 2;
-            int gcd;
+            uint gcd;
             do
             {
-                var c = Rnd.Next(1, 10);
-                a = GetRandom(a, c) % n;
-                b = GetRandom(GetRandom(b, c), c) % n;
-                gcd = Gcd(Math.Abs(a - b), n);
+                int c = Rnd.Next(1, 10);
+                a = GetRandom(a, c) % (int)n;
+                b = GetRandom(GetRandom(b, c), c) % (int)n;
+                gcd = (uint)Gcd(Math.Abs(a - b), (int)n);
             } while(gcd == 1);
 
             return gcd;
         }
 
-        private static void CalcPrimeFactors(int n, List<int> factors)
+        private static void CalcPrimeFactors(uint n, List<int> factors)
         {
             if(n < 2)
             {
@@ -186,7 +149,7 @@ namespace PrimeReduction
             }
             if(IsPrime(n))
             {
-                factors.Add(n);
+                factors.Add((int)n);
                 return;
             }
 
@@ -195,7 +158,7 @@ namespace PrimeReduction
             CalcPrimeFactors(n / divisor, factors);
         }
 
-        public static List<int> GetPrimes(int n)
+        public static List<int> GetPrimes(uint n)
         {
             if(n < 2)
             {
@@ -206,28 +169,14 @@ namespace PrimeReduction
             return factors;
         }
 
-        public static PrimeReductionWithCount Reduce(int n)
+        public static PrimeReductionWithCount Reduce(uint n)
         {
-            if(Precalc.ContainsKey(n))
-            {
-                return Precalc[n];
-            }
-            var n1 = n;
-            int i = 1;
+            uint n1 = n;
+            uint i = 1;
             while(!IsPrime(n1))
             {
-                Debug.WriteLine($"PrimeReductionWithCount: {n1} step {i}");
-                PrimeReductionWithCount v;
-                if(Precalc.TryGetValue(n1, out v))
-                {
-                    Debug.WriteLine("Hit!");
-                    return new PrimeReductionWithCount(v.Reduction,
-                        v.Count + i - 1);
-                }
-
-                Debug.WriteLine("Miss!");
                 var readOnlyCollection = GetPrimes(n1);
-                n1 = readOnlyCollection.Sum();
+                n1 = (uint)readOnlyCollection.Sum();
                 i++;
             }
 
@@ -239,15 +188,13 @@ namespace PrimeReduction
     {
         private static void Main(string[] args)
         {
-            PrimeFunctions.BeginPrecalc(5, 10000);
-
-            int n;
-            var nums = new List<int>(20000);
+            uint n;
+            var nums = new List<uint>(20000);
             var scanner = new Scanner();
             var w = new BufferedStdoutWriter();
             var resStr = new StringBuilder(10000);
 
-            while((n = scanner.NextInt()) != 4)
+            while((n = (uint)scanner.NextInt()) != 4)
             {
                 nums.Add(n);
             }
@@ -264,7 +211,6 @@ namespace PrimeReduction
             sw.Stop();
             w.Write(resStr.ToString());
             w.Flush();
-            Console.WriteLine($"Execution took {sw.ElapsedMilliseconds}ms");
         }
     }
 }
