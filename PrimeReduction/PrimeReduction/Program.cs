@@ -9,7 +9,6 @@ using Kattis.IO;
 
 namespace PrimeReduction
 {
-    //IMHO much better to use named Tuples in new C#
     [DebuggerDisplay("{Reduction} {Count}")]
     public struct PrimeReductionWithCount
     {
